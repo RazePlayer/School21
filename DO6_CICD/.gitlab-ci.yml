@@ -1,0 +1,51 @@
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - lint
+  - tests
+  - deployment
+  - notify
+
+SimpleBashUtils:
+  stage: build
+  tags:
+    - build
+  script:
+    - cd src/cat
+    - make
+    - cd ../grep
+    - make
+  artifacts:
+    paths:
+      - src/cat/s21_cat
+      - src/grep/s21_grep
+    expire_in: 30 days
+lint_code_style:
+  stage: lint
+  tags:
+    - style
+  script:
+    - cd src/
+    - bash style.sh
+integration_tests:
+  stage: tests
+  tags:
+  - test
+  script:
+  - cd src/
+  - bash integration_tests.sh
+deployment:
+  stage: deployment
+  tags:
+   - deploy
+  when: manual
+  script:
+   - cd src/
+   - bash deployment.sh
+   - bash notify.sh "SUCCESS"
+telegram:
+  stage: notify
+  when: on_failure
+  script:
+    - cd src/
+    - bash notify.sh "FAILURE"
